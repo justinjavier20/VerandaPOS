@@ -1,27 +1,114 @@
-const USERS = [
+const DEFAULT_USERS = [
     {
-        username: "admin",
+        username: "adminpoako",
         password: "admin123",
         role: "Admin"
     },
     {
-        username: "staff",
+        username: "staffpoako",
         password: "staff123",
         role: "Staff"
     }
 ];
 
+const USERS_STORAGE_KEY = "verandaCustomUsers";
+const PENDING_USERS_STORAGE_KEY = "verandaPendingUsers";
+let USERS = [...DEFAULT_USERS];
+let pendingStaffAccounts = [];
+
+function loadSavedUsers() {
+    try {
+        const savedUsers = JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) || "[]");
+        USERS = [];
+
+        for (let i = 0; i < DEFAULT_USERS.length; i++) {
+            USERS[USERS.length] = DEFAULT_USERS[i];
+        }
+
+        if (Array.isArray(savedUsers)) {
+            for (let i = 0; i < savedUsers.length; i++) {
+                const user = savedUsers[i];
+
+                if (!user || !user.username || !user.password) {
+                    continue;
+                }
+
+                const savedUser = {
+                    username: user.username,
+                    password: user.password,
+                    role: user.role || "Staff"
+                };
+                let existingIndex = -1;
+
+                for (let j = 0; j < USERS.length; j++) {
+                    if (USERS[j].username.toLowerCase() === user.username.toLowerCase()) {
+                        existingIndex = j;
+                        break;
+                    }
+                }
+
+                if (existingIndex === -1) {
+                    USERS[USERS.length] = savedUser;
+                } else {
+                    USERS[existingIndex] = savedUser;
+                }
+            }
+        }
+    } catch (error) {
+        USERS = [];
+
+        for (let i = 0; i < DEFAULT_USERS.length; i++) {
+            USERS[USERS.length] = DEFAULT_USERS[i];
+        }
+    }
+}
+
+function loadPendingAccounts() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(PENDING_USERS_STORAGE_KEY) || "[]");
+        pendingStaffAccounts = Array.isArray(saved) ? saved : [];
+    } catch (error) {
+        pendingStaffAccounts = [];
+    }
+}
+
+function saveUsers() {
+    const customUsers = [];
+
+    for (let i = 0; i < USERS.length; i++) {
+        let isDefaultUser = false;
+
+        for (let j = 0; j < DEFAULT_USERS.length; j++) {
+            if (DEFAULT_USERS[j].username.toLowerCase() === USERS[i].username.toLowerCase()) {
+                isDefaultUser = true;
+                break;
+            }
+        }
+
+        if (!isDefaultUser) {
+            customUsers[customUsers.length] = USERS[i];
+        }
+    }
+
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(customUsers));
+}
+
+function savePendingAccounts() {
+    localStorage.setItem(PENDING_USERS_STORAGE_KEY, JSON.stringify(pendingStaffAccounts));
+}
+
+loadSavedUsers();
+loadPendingAccounts();
+
 const STAFF_ALLOWED = [
     "reservations",
     "findReservation",
-    "cancelReservation",
     "sortReservations",
     "diningMonitor",
     "tableAvailability",
     "assignTable",
     "waitlist",
     "checkIn",
-    "guestCount",
     "billSummary",
     "discounts",
     "payment"
@@ -252,6 +339,116 @@ function showStaffLogin() {
     document.body.classList.add("logged-out", "staff-login-mode");
     document.getElementById("customerApp").hidden = true;
     document.getElementById("loginOverlay").style.display = "flex";
+    hideCreateAccountForm();
+    document.getElementById("loginError").textContent = "";
+}
+
+function showCreateAccountForm() {
+    const panel = document.getElementById("createAccountPanel");
+    const error = document.getElementById("createAccountError");
+
+    panel.hidden = false;
+    document.querySelector(".login-card").classList.add("creating-account");
+    error.textContent = "";
+    error.style.color = "#b42318";
+    document.getElementById("createUsername").value = "";
+    document.getElementById("createPassword").value = "";
+    document.getElementById("createPasswordConfirm").value = "";
+}
+
+function hideCreateAccountForm() {
+    const panel = document.getElementById("createAccountPanel");
+    const error = document.getElementById("createAccountError");
+
+    panel.hidden = true;
+    document.querySelector(".login-card").classList.remove("creating-account");
+    error.textContent = "";
+    error.style.color = "#b42318";
+    document.getElementById("createUsername").value = "";
+    document.getElementById("createPassword").value = "";
+    document.getElementById("createPasswordConfirm").value = "";
+    document.getElementById("createPassword").type = "password";
+    document.getElementById("createPasswordConfirm").type = "password";
+    document.querySelectorAll(".password-toggle").forEach(button => {
+        button.textContent = "Show";
+    });
+}
+
+function togglePasswordVisibility(id) {
+    const input = document.getElementById(id);
+    const button = input.parentElement.querySelector(".password-toggle");
+
+    if (!input || !button) {
+        return;
+    }
+
+    const isPassword = input.type === "password";
+    input.type = isPassword ? "text" : "password";
+    button.textContent = isPassword ? "Hide" : "Show";
+}
+
+function confirmCreateAccount() {
+    const username = document.getElementById("createUsername").value.trim();
+    const password = document.getElementById("createPassword").value;
+    const confirmPassword = document.getElementById("createPasswordConfirm").value;
+    const error = document.getElementById("createAccountError");
+
+    if (!username || !password || !confirmPassword) {
+        error.textContent = "Complete all account fields before continuing.";
+        error.style.color = "#b42318";
+        return;
+    }
+
+    let usernameInUse = false;
+
+    for (let i = 0; i < USERS.length; i++) {
+        if (USERS[i].username.toLowerCase() === username.toLowerCase()) {
+            usernameInUse = true;
+            break;
+        }
+    }
+
+    for (let i = 0; !usernameInUse && i < pendingStaffAccounts.length; i++) {
+        if (pendingStaffAccounts[i].username.toLowerCase() === username.toLowerCase()) {
+            usernameInUse = true;
+        }
+    }
+
+    if (usernameInUse) {
+        error.textContent = "That username is already in use.";
+        error.style.color = "#b42318";
+        return;
+    }
+
+    if (password.length < 6) {
+        error.textContent = "Password must be at least 6 characters long.";
+        error.style.color = "#b42318";
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        error.textContent = "Passwords do not match.";
+        error.style.color = "#b42318";
+        return;
+    }
+
+    pendingStaffAccounts[pendingStaffAccounts.length] = {
+        id: Date.now() + Math.random(),
+        username: username,
+        password: password,
+        requestedAt: new Date().toISOString()
+    };
+    savePendingAccounts();
+
+    document.getElementById("createUsername").value = "";
+    document.getElementById("createPassword").value = "";
+    document.getElementById("createPasswordConfirm").value = "";
+
+    document.getElementById("loginError").textContent = "Account request submitted. Please wait for admin approval.";
+    document.getElementById("loginError").style.color = "#0a7f38";
+    hideCreateAccountForm();
+    error.textContent = "";
+    error.style.color = "#b42318";
 }
 
 function renderCustomer() {
@@ -319,7 +516,7 @@ function renderCustomerHome() {
         ${customerHeader()}
         <section class="customer-hero">
             <div>
-                <h1>Welcome to Veranda Restogarden!</h1>
+                <h1>Welcome to Veranda Resto Garden!</h1>
                 <p>A unique dining experience where delicious flavors meet a tranquil garden setting. Enjoy a menu crafted from locally sourced ingredients.</p>
                 <p>Join us for good food, great company, and unforgettable moments!</p>
                 <div class="customer-actions">
@@ -358,7 +555,7 @@ function renderCustomerForm() {
                     </div>
                     <div class="customer-field">
                         <label for="customer-adults">Number of Adults</label>
-                        <input id="customer-adults" name="adult" type="number" min="0" value="1" required>
+                        <input id="customer-adults" name="adult" type="number" min="0" value="0" required>
                     </div>
                     <div class="customer-field">
                         <label for="customer-kids">Number of Kids</label>
@@ -553,7 +750,6 @@ function customerReservationSummary(reservation) {
                 <div><dt>Adults</dt><dd>${Number(reservation.adult) || 0}</dd></div>
                 <div><dt>Kids</dt><dd>${Number(reservation.kid) || 0}</dd></div>
                 <div><dt>Seniors</dt><dd>${Number(reservation.senior) || 0}</dd></div>
-                <div><dt>Total Guests</dt><dd>${Number(reservation.guests) || 0}</dd></div>
                 <div><dt>Table</dt><dd>${reservation.tableNumber ? `Table ${escapeHtml(reservation.tableNumber)}` : "Pending"}</dd></div>
                 <div><dt>Status</dt><dd>${escapeHtml(reservationStatus)}</dd></div>
             </dl>
@@ -657,7 +853,6 @@ const NAV = [
         items: [
             ["reservations", "Reservations"],
             ["findReservation", "Find a Reservation"],
-            ["cancelReservation", "Cancel a Reservation"],
             ["sortReservations", "Sort Reservations"]
         ]
     },
@@ -674,7 +869,6 @@ const NAV = [
     {
         group: "Orders & Billing",
         items: [
-            ["guestCount", "Guest Count"],
             ["billSummary", "Bill Summary"],
             ["discounts", "Discounts"],
             ["payment", "Payment"]
@@ -685,6 +879,12 @@ const NAV = [
         items: [
             ["dailyReport", "Daily Report"]
         ]
+    },
+    {
+        group: "Admin",
+        items: [
+            ["accountApprovals", "Account Approvals"]
+        ]
     }
 ];
 
@@ -692,7 +892,7 @@ const NAV = [
 
 function login() {
     const username =
-        document.getElementById("loginUsername").value;
+        document.getElementById("loginUsername").value.trim();
 
     const password =
         document.getElementById("loginPassword").value;
@@ -702,7 +902,7 @@ function login() {
 
     if (!username) {
         error.textContent =
-            "Please select Admin or Staff.";
+            "Please enter your username.";
         return;
     }
 
@@ -716,7 +916,7 @@ function login() {
 
     for (let i = 0; i < USERS.length; i++) {
         if (
-            USERS[i].username === username &&
+            USERS[i].username.toLowerCase() === username.toLowerCase() &&
             USERS[i].password === password
         ) {
             user = USERS[i];
@@ -762,11 +962,16 @@ function logout() {
     document.getElementById("loginOverlay")
         .style.display = "flex";
 
+    document.getElementById("loginUsername")
+        .value = "";
+
     document.getElementById("loginPassword")
         .value = "";
 
     document.getElementById("loginError")
         .textContent = "";
+
+    hideCreateAccountForm();
 }
 
 
@@ -774,13 +979,23 @@ function logout() {
 function go(id) {
     if (
         currentUser.role === "Staff" &&
-        STAFF_ALLOWED.indexOf(id) === -1
+        !staffHasAccess(id)
     ) {
         return;
     }
 
     activeSection = id;
     render();
+}
+
+function staffHasAccess(sectionId) {
+    for (let i = 0; i < STAFF_ALLOWED.length; i++) {
+        if (STAFF_ALLOWED[i] === sectionId) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function getVisibleNavItems() {
@@ -795,7 +1010,7 @@ function getVisibleNavItems() {
             if (
                 currentUser &&
                 currentUser.role === "Staff" &&
-                STAFF_ALLOWED.indexOf(id) === -1
+                !staffHasAccess(id)
             ) {
                 continue;
             }
@@ -814,7 +1029,14 @@ function moveSectionByKey(direction) {
         return;
     }
 
-    let index = items.indexOf(activeSection);
+    let index = -1;
+
+    for (let i = 0; i < items.length; i++) {
+        if (items[i] === activeSection) {
+            index = i;
+            break;
+        }
+    }
 
     if (index === -1) {
         index = direction === "down" ? 0 : items.length - 1;
@@ -1189,7 +1411,7 @@ function renderNav() {
         for (let i = 0; i < items.length; i++) {
             if (
                 currentUser.role === "Staff" &&
-                STAFF_ALLOWED.indexOf(items[i][0]) === -1
+                !staffHasAccess(items[i][0])
             ) {
                 continue;
             }
@@ -1300,7 +1522,13 @@ function reservationsTable(list, actions = false) {
                         ? `<td>
                             ${r.status === "pending"
                                 ? `<button class="btn confirm small" onclick="confirmReservation(${r.id})">Confirm</button>`
-                                : "—"}
+                                : ""}
+                            ${r.status === "pending" || r.status === "confirmed"
+                                ? `<button class="btn danger small" onclick="cancelReservationById(${r.id})">Cancel</button>`
+                                : ""}
+                            ${r.status !== "pending" && r.status !== "confirmed"
+                                ? "—"
+                                : ""}
                            </td>`
                         : ""
                 }
@@ -1408,7 +1636,6 @@ function renderReservations() {
                         type="number"
                         min="0"
                         value="0"
-                        oninput="updateReservationTotal()"
                     >
                 </div>
 
@@ -1419,7 +1646,6 @@ function renderReservations() {
                         type="number"
                         min="0"
                         value="0"
-                        oninput="updateReservationTotal()"
                     >
                 </div>
 
@@ -1430,16 +1656,6 @@ function renderReservations() {
                         type="number"
                         min="0"
                         value="0"
-                        oninput="updateReservationTotal()"
-                    >
-                </div>
-
-                <div>
-                    <label>Total Guests</label>
-                    <input
-                        id="rm-guests"
-                        value="0"
-                        readonly
                     >
                 </div>
             </div>
@@ -1479,17 +1695,7 @@ function confirmReservation(id) {
 }
 
 function updateReservationTotal() {
-    const adult =
-        +document.getElementById("rm-adult").value || 0;
-
-    const kid =
-        +document.getElementById("rm-kid").value || 0;
-
-    const senior =
-        +document.getElementById("rm-senior").value || 0;
-
-    document.getElementById("rm-guests").value =
-        adult + kid + senior;
+    return;
 }
 
 function conflict(tableNumber, date, time, ignore) {
@@ -1517,9 +1723,11 @@ function addReservation() {
     const lastName =
         document.getElementById("rm-last-name").value.trim();
 
-    const name = [firstName, lastName]
-        .filter(Boolean)
-        .join(" ");
+    let name = firstName;
+
+    if (lastName) {
+        name = name ? name + " " + lastName : lastName;
+    }
 
     const contact =
         document.getElementById("rm-contact").value.trim();
@@ -1607,12 +1815,88 @@ function addReservation() {
 
 /* FIND RESERVATION */
 
+let findQuery = "";
+
+function textContains(text, query) {
+    if (query.length > text.length) {
+        return false;
+    }
+
+    for (let start = 0; start <= text.length - query.length; start++) {
+        let matched = true;
+
+        for (let offset = 0; offset < query.length; offset++) {
+            if (text[start + offset] !== query[offset]) {
+                matched = false;
+                break;
+            }
+        }
+
+        if (matched) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function findMatches(query) {
+    const q = String(query || "").trim().toLowerCase();
+
+    if (!q) {
+        return [];
+    }
+
+    let matches = [];
+
+    for (let i = 0; i < reservations.length; i++) {
+        const r = reservations[i];
+
+        const id = String(r.id);
+        const publicId = reservationReference(r).toLowerCase();
+        const legacyId = "res-" + String(r.id).padStart(3, "0");
+
+        if (
+            id === q ||
+            id.padStart(3, "0") === q ||
+            textContains(publicId, q) ||
+            legacyId === q ||
+            textContains(String(r.name || "").toLowerCase(), q) ||
+            textContains(String(r.contact || "").toLowerCase(), q)
+        ) {
+            matches[matches.length] = r;
+        }
+    }
+
+    return matches;
+}
+
+function findResultHtml() {
+    if (!findQuery.trim()) {
+        return '<p class="empty">Type a name or reservation number first.</p>';
+    }
+
+    const matches = findMatches(findQuery);
+
+    if (!matches.length) {
+        return `<p class="empty">No reservation matched "${escapeHtml(findQuery.trim())}".</p>`;
+    }
+
+    return `
+        <p class="hint">
+            ${matches.length} reservation${matches.length === 1 ? "" : "s"} found.
+            Use Confirm or Cancel in the Action column.
+        </p>
+        ${reservationsTable(matches, true)}
+    `;
+}
+
 function renderFindReservation() {
     return `
         <div class="card">
             ${head(
                 "Find a Reservation",
-                "Search by reservation ID or guest name."
+                "Search by reservation ID, guest name, or contact number. You can cancel a reservation right from the results."
             )}
 
             ${flash()}
@@ -1625,6 +1909,8 @@ function renderFindReservation() {
 
                     <input
                         id="rs-query"
+                        value="${escapeHtml(findQuery)}"
+                        onkeydown="if(event.key === 'Enter'){ searchReservation(); }"
                     >
                 </div>
 
@@ -1640,7 +1926,7 @@ function renderFindReservation() {
                 </div>
             </div>
 
-            <div id="rs-result"></div>
+            <div id="rs-result">${findQuery.trim() ? findResultHtml() : ""}</div>
         </div>
 
         <div class="card">
@@ -1656,197 +1942,14 @@ function renderFindReservation() {
 }
 
 function searchReservation() {
-    const q =
-        document.getElementById("rs-query")
-            .value
-            .trim()
-            .toLowerCase();
+    findQuery = document.getElementById("rs-query").value;
 
-    let found = null;
-
-    for (let i = 0; i < reservations.length; i++) {
-        const r = reservations[i];
-
-        const id = String(r.id);
-        const publicId = reservationReference(r).toLowerCase();
-        const legacyId = "res-" + String(r.id).padStart(3, "0");
-
-        if (
-            id === q ||
-            id.padStart(3, "0") === q ||
-            publicId.toLowerCase() === q ||
-            legacyId === q ||
-            r.name.toLowerCase().includes(q)
-        ) {
-            found = r;
-            break;
-        }
-    }
-
-    document.getElementById("rs-result").innerHTML =
-        !q
-            ? '<p class="empty">Type a name or reservation number first.</p>'
-            : found
-                ? reservationsTable([found], true)
-                : `<p class="empty">
-                    No reservation matched "${q}".
-                   </p>`;
-}
-
-
-
-function renderCancelReservation() {
-    let list = [];
-
-    for (let i = 0; i < reservations.length; i++) {
-        if (
-            reservations[i].status === "pending" ||
-            reservations[i].status === "confirmed"
-        ) {
-            list[list.length] = reservations[i];
-        }
-    }
-
-    if (!list.length) {
-        return `
-            <div class="card">
-                ${head(
-                    "Cancel a Reservation",
-                    "There are no active reservations to cancel."
-                )}
-
-                ${flash()}
-
-                <p class="empty">
-                    Nothing to cancel.
-                </p>
-            </div>
-        `;
-    }
-
-    let options = "";
-
-    for (let i = 0; i < list.length; i++) {
-        options += `
-            <option value="${list[i].id}">
-                ${reservationReference(list[i])}
-                — ${list[i].name}
-                — ${list[i].date} ${list[i].time}
-            </option>
-        `;
-    }
-
-    return `
-        <div class="card">
-            ${head("Cancel a Reservation")}
-
-            ${flash()}
-
-            <div class="row">
-                <div>
-                    <label>Search reservation</label>
-                    <input
-                        id="cx-search"
-                        oninput="filterCancelReservations()"
-                        placeholder="Name or reservation ID"
-                    >
-                </div>
-            </div>
-
-            <div class="row">
-                <div>
-                    <label>Reservation</label>
-
-                    <select id="cx-res">
-                        ${options}
-                    </select>
-                </div>
-
-                <div
-                    style="display:flex;align-items:flex-end"
-                >
-                    <button
-                        class="btn danger"
-                        onclick="cancelReservation()"
-                    >
-                        Cancel reservation
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function filterCancelReservations() {
-    const q = (
-        document.getElementById("cx-search")
-            ? document.getElementById("cx-search").value
-            : ""
-    )
-        .trim()
-        .toLowerCase();
-
-    const select = document.getElementById("cx-res");
-
-    if (!select) {
-        return;
-    }
-
-    let list = [];
-
-    for (let i = 0; i < reservations.length; i++) {
-        if (
-            reservations[i].status !== "pending" &&
-            reservations[i].status !== "confirmed"
-        ) {
-            continue;
-        }
-
-        const term = (
-            reservationReference(reservations[i]) +
-            " " +
-            reservations[i].name +
-            " " +
-            reservations[i].date +
-            " " +
-            reservations[i].time
-        )
-            .toLowerCase();
-
-        if (!q || term.includes(q)) {
-            list[list.length] = reservations[i];
-        }
-    }
-
-    if (!list.length) {
-        select.innerHTML = `
-            <option value="">No matching reservation</option>
-        `;
-        return;
-    }
-
-    let options = "";
-
-    for (let i = 0; i < list.length; i++) {
-        options += `
-            <option value="${list[i].id}">
-                ${reservationReference(list[i])}
-                — ${list[i].name}
-                — ${list[i].date} ${list[i].time}
-            </option>
-        `;
-    }
-
-    select.innerHTML = options;
-}
-
-function cancelReservation() {
-    cancelReservationById(
-        +document.getElementById("cx-res").value
-    );
+    document.getElementById("rs-result").innerHTML = findResultHtml();
 }
 
 function cancelReservationById(id) {
+    loadSharedReservations();
+
     let index = -1;
 
     for (let i = 0; i < reservations.length; i++) {
@@ -2795,82 +2898,126 @@ function loadBillingSession() {
 function computeSubtotal() {
     let total = 0;
 
-    packages.forEach(p => {
+    for (let i = 0; i < packages.length; i++) {
+        const p = packages[i];
         total +=
             (
                 currentOrder[
                     p.type.toLowerCase()
                 ] || 0
             ) * p.price;
-    });
+            }
 
     return total;
 }
 
-function renderGuestCount() {
-    const total =
-        currentOrder.adult +
-        currentOrder.kid +
-        currentOrder.senior;
+function approvePendingAccount(id) {
+    let account = null;
+
+    for (let i = 0; i < pendingStaffAccounts.length; i++) {
+        if (String(pendingStaffAccounts[i].id) === String(id)) {
+            account = pendingStaffAccounts[i];
+            break;
+        }
+    }
+
+    if (!account) {
+        return;
+    }
+
+    USERS[USERS.length] = {
+        username: account.username,
+        password: account.password,
+        role: "Staff"
+    };
+
+    saveUsers();
+    const remainingAccounts = [];
+
+    for (let i = 0; i < pendingStaffAccounts.length; i++) {
+        if (String(pendingStaffAccounts[i].id) !== String(id)) {
+            remainingAccounts[remainingAccounts.length] = pendingStaffAccounts[i];
+        }
+    }
+
+    pendingStaffAccounts = remainingAccounts;
+    savePendingAccounts();
+    setFlash(`${account.username} approved for staff access.`);
+    render();
+}
+
+function rejectPendingAccount(id) {
+    const remainingAccounts = [];
+
+    for (let i = 0; i < pendingStaffAccounts.length; i++) {
+        if (String(pendingStaffAccounts[i].id) !== String(id)) {
+            remainingAccounts[remainingAccounts.length] = pendingStaffAccounts[i];
+        }
+    }
+
+    pendingStaffAccounts = remainingAccounts;
+    savePendingAccounts();
+    setFlash("Account request rejected.");
+    render();
+}
+
+function renderAccountApprovals() {
+    let accountCards = "";
+
+    for (let i = 0; i < pendingStaffAccounts.length; i++) {
+        const account = pendingStaffAccounts[i];
+        accountCards += `
+            <div class="approval-item">
+                <div>
+                    <strong>${escapeHtml(account.username)}</strong>
+                    <p>Requested on ${new Date(account.requestedAt || Date.now()).toLocaleString()}</p>
+                </div>
+                <div class="approval-actions">
+                    <button class="btn btn-ok" onclick="approvePendingAccount(${String(account.id)})">Approve</button>
+                    <button class="btn btn-cancel" onclick="rejectPendingAccount(${String(account.id)})">Reject</button>
+                </div>
+            </div>
+        `;
+    }
 
     return `
         <div class="card">
             ${head(
-                "Guest Count",
-                "Current guest classification."
+                "Account Approvals",
+                "Review and approve staff account requests."
             )}
 
             ${flash()}
 
-            <div class="summary-grid">
-                <div class="stat">
-                    <span class="num">
-                        ${currentOrder.adult}
-                    </span>
-
-                    <span class="lbl">
-                        Adults
-                    </span>
+            ${!pendingStaffAccounts.length ? `
+                <p class="empty">No pending staff account requests.</p>
+            ` : `
+                <div class="approval-list">
+                    ${accountCards}
                 </div>
-
-                <div class="stat">
-                    <span class="num">
-                        ${currentOrder.kid}
-                    </span>
-
-                    <span class="lbl">
-                        Kids
-                    </span>
-                </div>
-
-                <div class="stat">
-                    <span class="num">
-                        ${currentOrder.senior}
-                    </span>
-
-                    <span class="lbl">
-                        Seniors
-                    </span>
-                </div>
-
-                <div class="stat">
-                    <span class="num">
-                        ${total}
-                    </span>
-
-                    <span class="lbl">
-                        Total
-                    </span>
-                </div>
-            </div>
+            `}
         </div>
     `;
 }
 
 function renderBillSummary() {
     const sub = computeSubtotal();
+    let packageRows = "";
 
     currentOrder.subtotal = sub;
+
+    for (let i = 0; i < packages.length; i++) {
+        const p = packages[i];
+        const quantity = currentOrder[p.type.toLowerCase()] || 0;
+        packageRows += `
+            <tr>
+                <td>${p.type}</td>
+                <td>${quantity}</td>
+                <td>₱${p.price}</td>
+                <td>₱${quantity * p.price}</td>
+            </tr>
+        `;
+    }
 
     return `
         <div class="card">
@@ -2930,21 +3077,7 @@ function renderBillSummary() {
                 </thead>
 
                 <tbody>
-                    ${packages.map(p => {
-                        const q =
-                            currentOrder[
-                                p.type.toLowerCase()
-                            ] || 0;
-
-                        return `
-                            <tr>
-                                <td>${p.type}</td>
-                                <td>${q}</td>
-                                <td>₱${p.price}</td>
-                                <td>₱${q * p.price}</td>
-                            </tr>
-                        `;
-                    }).join("")}
+                    ${packageRows}
                 </tbody>
             </table>
 
@@ -3796,13 +3929,12 @@ const RENDERERS = {
     reservations: renderReservations,
     findReservation: renderFindReservation,
     diningMonitor: renderDiningMonitor,
-    cancelReservation: renderCancelReservation,
     sortReservations: renderSortReservations,
     tableAvailability: renderTableAvailability,
     assignTable: renderAssignTable,
     waitlist: renderWaitlist,
     checkIn: renderCheckIn,
-    guestCount: renderGuestCount,
+    accountApprovals: renderAccountApprovals,
     billSummary: renderBillSummary,
     discounts: renderDiscounts,
     payment: renderPayment,
@@ -3813,9 +3945,7 @@ function render() {
     if (
         currentUser &&
         currentUser.role === "Staff" &&
-        STAFF_ALLOWED.indexOf(
-            activeSection
-        ) === -1
+        !staffHasAccess(activeSection)
     ) {
         activeSection = "reservations";
     }

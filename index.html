@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -18,32 +18,84 @@
     <div id="loginOverlay">
         <div class="login-stage">
             <div class="login-card">
-                <h1 class="login-brand">Veranda Resto Garden</h1>
+                <div class="login-logo-wrap">
+                    <img class="login-logo" src="295049ea-2cf1-42f9-9b67-5a65c67ebc73-removebg-preview.png" alt="Veranda Resto Garden logo">
+                </div>
+                <div class="login-brand">Veranda Resto Garden</div>
 
-                <label>Select Account</label>
+                <h1>Welcome Back</h1>
+                <p class="login-sub">Sign in to continue to the management system.</p>
 
-                <select id="loginUsername" onkeydown="if(event.key === 'Enter'){ login(); }">
-                    <option value="">Select Account</option>
-                    <option value="admin">Admin</option>
-                    <option value="staff">Staff</option>
-                </select>
-
+                <label class="login-label" for="loginUsername">Username</label>
                 <input
-                    id="loginPassword"
-                    type="password"
-                    placeholder="Enter Password"
+                    id="loginUsername"
+                    type="text"
+                    placeholder="Enter your username"
+                    autocomplete="username"
                     onkeydown="if(event.key === 'Enter'){ login(); }"
                 >
 
-                <button onclick="login()">Login</button>
+                <label class="login-label" for="loginPassword">Password</label>
+                <input
+                    id="loginPassword"
+                    type="password"
+                    placeholder="Enter your password"
+                    autocomplete="current-password"
+                    onkeydown="if(event.key === 'Enter'){ login(); }"
+                >
 
-                <div id="loginError" class="login-error"></div>
+                <button class="login-primary" onclick="login()">Login</button>
+
+                <button class="login-link-button" type="button" onclick="showCreateAccountForm()">Create Account</button>
+
+                <div id="loginError" class="login-error" role="alert"></div>
+
+                <div id="createAccountPanel" class="create-account-panel" hidden>
+                    <h2 class="create-account-title">Create Account</h2>
+
+                    <label class="login-label" for="createUsername">Create Username</label>
+                    <input
+                        id="createUsername"
+                        type="text"
+                        placeholder="Enter a username"
+                        autocomplete="username"
+                    >
+
+                    <label class="login-label" for="createPassword">Create Password</label>
+                    <div class="password-input-wrap">
+                        <input
+                            id="createPassword"
+                            type="password"
+                            placeholder="Create a password"
+                            autocomplete="new-password"
+                        >
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('createPassword')">Show</button>
+                    </div>
+
+                    <label class="login-label" for="createPasswordConfirm">Confirm Password</label>
+                    <div class="password-input-wrap">
+                        <input
+                            id="createPasswordConfirm"
+                            type="password"
+                            placeholder="Confirm your password"
+                            autocomplete="new-password"
+                        >
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('createPasswordConfirm')">Show</button>
+                    </div>
+
+                    <div class="create-account-actions">
+                        <button class="login-secondary create-account-back" type="button" onclick="hideCreateAccountForm()">Back</button>
+                        <button class="login-primary create-account-confirm" type="button" onclick="confirmCreateAccount()">Confirm</button>
+                    </div>
+
+                    <div id="createAccountError" class="login-error" role="alert"></div>
+                </div>
+
+                <div class="login-divider"><span>or</span></div>
+
+                <button class="login-secondary" type="button" onclick="showCustomerHome()">Back to Customer Page</button>
             </div>
         </div>
-
-        <footer class="customer-admin-access login-customer-access">
-            Customer site? <button onclick="showCustomerHome()">Back to customer site</button>
-        </footer>
     </div>
 
     <header id="topbar">

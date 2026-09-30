@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veranda Resto Garden Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arizonia&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+
+<body class="logged-out">
+
+    <main id="customerApp" class="customer-app"></main>
+
+    <div id="loginOverlay">
+        <div class="login-stage">
+            <div class="login-card">
+                <h1 class="login-brand">Veranda Resto Garden</h1>
+
+                <label>Select Account</label>
+
+                <select id="loginUsername" onkeydown="if(event.key === 'Enter'){ login(); }">
+                    <option value="">Select Account</option>
+                    <option value="admin">Admin</option>
+                    <option value="staff">Staff</option>
+                </select>
+
+                <input
+                    id="loginPassword"
+                    type="password"
+                    placeholder="Enter Password"
+                    onkeydown="if(event.key === 'Enter'){ login(); }"
+                >
+
+                <button onclick="login()">Login</button>
+
+                <div id="loginError" class="login-error"></div>
+            </div>
+        </div>
+
+        <footer class="customer-admin-access login-customer-access">
+            Customer site? <button onclick="showCustomerHome()">Back to customer site</button>
+        </footer>
+    </div>
+
+    <header id="topbar">
+        <div class="topbar-brand">
+            <img
+                class="topbar-brand-logo"
+                src="295049ea-2cf1-42f9-9b67-5a65c67ebc73-removebg-preview.png"
+                alt=""
+            >
+            <div class="brand">Veranda Resto Garden</div>
+        </div>
+
+        <div class="user">
+            <span id="loggedUser"></span>
+            <button class="logout" onclick="logout()">Logout</button>
+        </div>
+
+        <div id="clock">
+            <span id="clockDate"></span>
+            <strong id="clockTime"></strong>
+        </div>
+    </header>
+
+    <div id="statstrip"></div>
+
+    <div id="shell">
+        <nav id="rail"></nav>
+
+        <main id="main">
+            <div id="content"></div>
+        </main>
+    </div>
+
+    <div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

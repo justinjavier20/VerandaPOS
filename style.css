@@ -2,6 +2,10 @@
     box-sizing: border-box;
 }
 
+html {
+    color-scheme: light;
+}
+
 html,
 body {
     margin: 0;
@@ -219,12 +223,20 @@ label {
 }
 
 input,
-select {
+select,
+textarea {
     width: 100%;
     padding: 8px 10px;
     border: 1px solid #bbb;
     border-radius: 10px;
     background: white;
+    color: #222;
+    color-scheme: light;
+}
+
+select option {
+    background: white;
+    color: #222;
 }
 
 .row input {
@@ -633,66 +645,264 @@ td {
 }
 
 .login-card {
-    width: 395px;
-    max-width: 90%;
-    padding: 27px 24px;
+    width: 420px;
+    max-width: 92%;
+    padding: 30px 28px 24px;
     background: white;
-    border: 1px solid #bbb;
-    border-radius: 18px;
-    box-shadow: 0 16px 35px rgba(0, 0, 0, 0.08);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border: 1px solid #e3d6d6;
+    border-radius: 20px;
+    box-shadow: 0 18px 40px rgba(85, 0, 0, 0.12);
+    text-align: center;
 }
 
-.login-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.09);
+.login-logo-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 6px;
 }
 
-.login-card h1 {
-    margin: 0 0 18px;
-    color: #550000;
-    font-size: 27px;
+.login-logo {
+    width: 84px;
+    height: 84px;
+    object-fit: contain;
+    border-radius: 50%;
+    box-shadow: 0 6px 16px rgba(85, 0, 0, 0.25);
 }
 
 .login-brand {
-    text-align: center;
-    font-size: 90px;
-    font-weight: 500;
-    letter-spacing: 0.04em;
+    margin: 4px 0 14px;
     color: #550000;
     font-family: "Arizonia", cursive;
-    text-transform: none;
-    line-height: 1;
-    text-shadow: 0 2px 8px rgba(85, 0, 0, 0.08);
-    margin: 0 0 18px;
+    font-size: 40px;
+    line-height: 1.1;
+    letter-spacing: 0.03em;
 }
 
-.login-card p {
+.login-card h1 {
+    margin: 0 0 4px;
+    color: #550000;
+    font-size: 26px;
+}
+
+.login-sub {
     margin: 0 0 18px;
     color: #777;
 }
 
+.login-label {
+    display: block;
+    margin: 12px 0 5px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: bold;
+    color: #444;
+}
+
 .login-card input,
 .login-card select {
-    margin: 7px 0;
-    padding: 9px;
+    width: 100%;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid #c9bcbc;
+    border-radius: 10px;
+    background: white;
+}
+
+.login-card input:focus,
+.login-card select:focus {
+    outline: none;
+    border-color: #550000;
+    box-shadow: 0 0 0 3px rgba(85, 0, 0, 0.12);
 }
 
 .login-card button {
     width: 100%;
-    margin-top: 11px;
-    padding: 10px;
-    border: 1px solid #550000;
+    padding: 11px;
     border-radius: 99px;
+    font-weight: bold;
+}
+
+.login-primary {
+    margin-top: 16px;
+    border: 1px solid #550000;
     background: #550000;
     color: white;
-    font-weight: bold;
+}
+
+.login-primary:hover {
+    box-shadow: 0 8px 16px rgba(85, 0, 0, 0.2);
+    transform: translateY(-1px);
+}
+
+.login-link-button {
+    margin-top: 12px;
+    border: none;
+    background: transparent;
+    color: #550000;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.login-link-button:hover {
+    text-decoration: underline;
+}
+
+.login-secondary {
+    border: 1px solid #550000;
+    background: white;
+    color: #550000;
+}
+
+.login-secondary:hover {
+    background: #f7eeee;
+}
+
+.create-account-panel {
+    margin-top: 0;
+}
+
+.login-card.creating-account > :not(#createAccountPanel) {
+    display: none;
+}
+
+.create-account-title {
+    margin: 0 0 10px;
+    color: #550000;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.password-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrap input {
+    width: 100%;
+    padding-right: 58px;
+}
+
+.login-card .password-toggle {
+    position: absolute;
+    right: 8px;
+    border: none;
+    background: transparent;
+    color: #550000;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 4px 6px;
+    line-height: 1.2;
+    min-width: 0;
+    width: auto;
+    border-radius: 0;
+    display: none;
+    pointer-events: none;
+}
+
+.login-card .password-input-wrap:hover input:not(:placeholder-shown) + .password-toggle {
+    display: block;
+    pointer-events: auto;
+}
+
+.create-account-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.create-account-actions button {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    margin-top: 0;
+}
+
+.create-account-back {
+    border-radius: 999px;
+    border: 1px solid #550000;
+    background: white;
+    color: #550000;
+}
+
+.create-account-confirm {
+    border-radius: 999px;
+}
+
+.approval-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.approval-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid #e3d6d6;
+    border-radius: 12px;
+    background: #fffaf8;
+}
+
+.approval-item p {
+    margin: 4px 0 0;
+    color: #666;
+    font-size: 12px;
+}
+
+.approval-actions {
+    display: flex;
+    gap: 8px;
 }
 
 .login-error {
     min-height: 19px;
-    margin-top: 9px;
+    margin-top: 10px;
     color: #b42318;
+}
+
+.login-error:empty {
+    display: none;
+}
+
+.login-divider {
+    position: relative;
+    margin: 8px 0;
+    color: #999;
+    font-size: 12px;
+    text-align: center;
+}
+
+.login-divider::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    border-top: 1px solid #ddd;
+}
+
+.login-divider span {
+    position: relative;
+    padding: 0 10px;
+    background: white;
+}
+
+.login-location {
+    display: block;
+    margin-top: 16px;
+    color: #777;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.login-location:hover {
+    color: #550000;
+    text-decoration: underline;
 }
 
 body.logged-out #topbar,
@@ -728,8 +938,13 @@ body.logged-out #loginOverlay {
 }
 
 .customer-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     color: #550000;
     font: 44px/1 "Arizonia", cursive;
+    line-height: 1;
+    white-space: nowrap;
 }
 
 .customer-brand-logo {
@@ -737,6 +952,7 @@ body.logged-out #loginOverlay {
     height: 62px;
     flex: 0 0 auto;
     object-fit: contain;
+    display: block;
 }
 
 .customer-header-actions,
@@ -776,8 +992,8 @@ body.logged-out #loginOverlay {
 .customer-hero {
     position: relative;
     isolation: isolate;
-    flex: 1;
-    min-height: 340px;
+    flex: 0 0 auto;
+    min-height: 560px;
     padding: 64px clamp(20px, 8vw, 120px);
     background: #f4f1ec;
     color: #26221d;
@@ -788,9 +1004,9 @@ body.logged-out #loginOverlay {
     z-index: -1;
     inset: 0;
     background-image: url("295049ea-2cf1-42f9-9b67-5a65c67ebc73-removebg-preview.png");
-    background-position: right 9% center;
+    background-position: right 15% center;
     background-repeat: no-repeat;
-    background-size: min(58vw, 560px) auto;
+    background-size: auto 100%;
     content: "";
     opacity: .14;
     pointer-events: none;
@@ -1116,4 +1332,32 @@ input::placeholder {
     .customer-field.full {
         grid-column: auto;
     }
+}
+
+/* CUSTOMER LOCATION CARD */
+
+.customer-location-card {
+    width: min(960px, calc(100% - 32px));
+    margin: 0 auto 28px;
+    padding: 20px;
+    background: white;
+    border: 1px solid #e3d6d6;
+    border-radius: 18px;
+    box-shadow: 0 10px 26px rgba(85, 0, 0, 0.08);
+}
+
+.customer-location-card h3 {
+    margin: 0 0 4px;
+    color: #550000;
+    font-size: 20px;
+}
+
+.customer-location-card p {
+    margin: 0 0 12px;
+    color: #666;
+}
+
+.find-cancel-btn {
+    background: white;
+    color: #550000;
 }

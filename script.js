@@ -1,6 +1,6 @@
 const DEFAULT_USERS = [
     {
-        username: "adminpoako",
+        username: "admin",
         password: "admin123",
         role: "Admin"
     },
